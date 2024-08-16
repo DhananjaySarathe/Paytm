@@ -3,6 +3,7 @@ const router = express.Router();
 const { User } = require("../db/User");
 const zod = require("zod");
 const JWT_SECRET = require("../config");
+const { authMiddleWare } = require("../middleware");
 
 router.use(express.json());
 
@@ -60,7 +61,7 @@ router.post("/login", (req, res) => {
   const body = req.body;
 });
 
-router.put("/update", async (req, res) => {
+router.put("/", authMiddleWare, async (req, res) => {
   const body = req.body;
   const result = updateSchema.safeParse(body);
   if (!result.success) {
