@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { User } = require("../db/User");
+const { User } = require("../db");
 const zod = require("zod");
 const JWT_SECRET = require("../config");
 const { authMiddleWare } = require("../middleware");
@@ -57,8 +57,40 @@ router.post("/signup", async (req, res) => {
   });
 });
 
-router.post("/login", (req, res) => {
+// Self Login route
+router.post("/login", async (req, res) => {
   const body = req.body;
+  const result = loginSchema.safeParse(body);
+  if (!result.success) {
+    res.status(400).json({ message: "Incorrect inputs" });
+  }
+
+  try {
+    const user = await User.findOne({
+      username: body.username,
+      password: body.password,
+    });
+    if (!user) {
+      return res.status(400).json({ message: "User not Exist, Try Signup" });
+    }
+    const userId = user._id;
+    const token = jwt.sign(
+      {
+        userId,
+      },
+      JWT_SECRET
+    );
+    res.json({
+      message: "User logged in successfully",
+      token: token,
+    });
+  } catch {
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+  res.status(411).json({
+    message: "Error loggin in",
+  });
+  
 });
 
 router.put("/", authMiddleWare, async (req, res) => {
