@@ -20,6 +20,11 @@ const updateSchema = zod.object({
   lastName: zod.string(),
 });
 
+const loginSchema = zod.object({
+  username: zod.string().email(),
+  password: zod.string(),
+});
+
 router.post("/signup", async (req, res) => {
   const body = req.body;
   const result = signUpSchema.safeParse(body);
@@ -57,8 +62,32 @@ router.post("/signup", async (req, res) => {
   });
 });
 
-router.post("/login", (req, res) => {
+
+// Self Login route
+router.post("/login", async (req, res) => {
   const body = req.body;
+  const result = loginSchema.safeParse(body);
+  if (!result.success) {
+    res.status(400).json({ message: "Incorrect inputs" });
+  }
+
+  try {
+    const user = await User.findOne({ username: body.username });
+    const userId = user._id;
+    const token = jwt.sign(
+      {
+        userId,
+      },
+      JWT_SECRET
+    );
+  } catch {
+    return res.status(500).json({ message: "User not Exist, Try Signup" });
+  }
+
+  res.json({
+    message: "User logged in successfully",
+    token: token,
+  });
 });
 
 router.put("/", authMiddleWare, async (req, res) => {
