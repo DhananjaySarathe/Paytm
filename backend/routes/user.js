@@ -13,6 +13,12 @@ const signUpSchema = zod.object({
   lastName: zod.string(),
 });
 
+const updateSchema = zod.object({
+  password: zod.string(),
+  firstName: zod.string(),
+  lastName: zod.string(),
+});
+
 router.post("/signup", async (req, res) => {
   const body = req.body;
   const result = signUpSchema.safeParse(body);
@@ -48,17 +54,26 @@ router.post("/signup", async (req, res) => {
     message: "User created successfully",
     token: token,
   });
-
 });
-
-
 
 router.post("/login", (req, res) => {
-  const { email, password } = req.body;
+  const body = req.body;
 });
 
-router.put("/update", (req, res) => {
-  const { name, email, password } = req.body;
+router.put("/update", async (req, res) => {
+  const body = req.body;
+  const result = updateSchema.safeParse(body);
+  if (!result.success) {
+    res.status(400).json({ message: "Incorrect inputs" });
+  }
+
+  await User.findOne(req.body, {
+    id: req.userId,
+  });
+
+  res.json({
+    message: "User updated successfully",
+  });
 });
 
 module.exports = router;
