@@ -7,7 +7,7 @@ const JWT_SECRET = require("../config");
 router.use(express.json());
 
 const signUpSchema = zod.object({
-  username: zod.string(),
+  username: zod.string().email(),
   password: zod.string(),
   firstName: zod.string(),
   lastName: zod.string(),
