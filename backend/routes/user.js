@@ -77,4 +77,44 @@ router.put("/", authMiddleWare, async (req, res) => {
   });
 });
 
+// I have added authMiddleware In below case .. Check may need to get removed
+router.get("/bulk", authMiddleWare, async (req, res) => {
+  const filter = req.query.filter || "";
+
+  // Handle empty filter (optional)
+  if (!filter) {
+    return res.json({ users: [] }); // Empty array or specific message
+  }
+
+  const users = await User.find({
+    $or: [
+      {
+        firstName: {
+          $regex: filter,
+        },
+        lastName: {
+          $regex: filter,
+        },
+      },
+    ],
+  });
+
+  // Below code handles the Case insensitivity situation :
+  // const users = await User.find({
+  //   $or: [
+  //     { firstName: { "$regex": filter, "i": true } },
+  //     { lastName: { "$regex": filter, "i": true } },
+  //   ],
+  // });
+
+  res.json({
+    user: users.map((user) => ({
+      username: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      id: user._id,
+    })),
+  });
+});
+
 module.exports = router;
