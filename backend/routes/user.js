@@ -4,6 +4,7 @@ const { User } = require("../db");
 const zod = require("zod");
 const JWT_SECRET = require("../config");
 const { authMiddleWare } = require("../middleware");
+const { Account } = require("../db");
 
 router.use(express.json());
 
@@ -51,6 +52,11 @@ router.post("/signup", async (req, res) => {
     JWT_SECRET
   );
 
+  await Account.create({
+    userId,
+    balance: 1 + Math.random() * 1000,
+  });
+
   res.json({
     message: "User created successfully",
     token: token,
@@ -90,7 +96,6 @@ router.post("/login", async (req, res) => {
   res.status(411).json({
     message: "Error loggin in",
   });
-  
 });
 
 router.put("/", authMiddleWare, async (req, res) => {
