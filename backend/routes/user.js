@@ -1,9 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const { User } = require("../db/User");
+const { User } = require("../db");
 const zod = require("zod");
 const JWT_SECRET = require("../config");
 const { authMiddleWare } = require("../middleware");
+const { Account } = require("../db");
 
 router.use(express.json());
 
@@ -56,12 +57,16 @@ router.post("/signup", async (req, res) => {
     JWT_SECRET
   );
 
+  await Account.create({
+    userId,
+    balance: 1 + Math.random() * 1000,
+  });
+
   res.json({
     message: "User created successfully",
     token: token,
   });
 });
-
 
 // Self Login route
 router.post("/login", async (req, res) => {
@@ -72,7 +77,13 @@ router.post("/login", async (req, res) => {
   }
 
   try {
-    const user = await User.findOne({ username: body.username });
+    const user = await User.findOne({
+      username: body.username,
+      password: body.password,
+    });
+    if (!user) {
+      return res.status(400).json({ message: "User not Exist, Try Signup" });
+    }
     const userId = user._id;
     const token = jwt.sign(
       {
@@ -80,13 +91,15 @@ router.post("/login", async (req, res) => {
       },
       JWT_SECRET
     );
+    res.json({
+      message: "User logged in successfully",
+      token: token,
+    });
   } catch {
-    return res.status(500).json({ message: "User not Exist, Try Signup" });
+    return res.status(500).json({ message: "Internal Server Error" });
   }
-
-  res.json({
-    message: "User logged in successfully",
-    token: token,
+  res.status(411).json({
+    message: "Error loggin in",
   });
 });
 
